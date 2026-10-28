@@ -5,8 +5,16 @@ pipeline {
         APP_NAME = 'spring-boot-hello'
         IMAGE_TAG = '1.0.0'
         IMAGE_NAME = "${APP_NAME}:${IMAGE_TAG}"
-        // Add Maven and Java JDK paths to environment
-        PATH = "C:\\Users\\Admin\\AppData\\Local\\Programs\\ApacheMaven\\apache-maven-3.9.11\\bin;D:\\Program Files\\Java\\jdk-25.0.5.0.3\\bin;${env.PATH}"
+        // Tool paths on Windows host
+        DOCKER_BIN = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin'
+        MINIKUBE_BIN = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\Minikube'
+        MAVEN_BIN = 'C:\\Users\\Admin\\AppData\\Local\\Programs\\ApacheMaven\\apache-maven-3.9.11\\bin'
+        JAVA_BIN = 'D:\\Program Files\\Java\\jdk-25.0.5.0.3\\bin'
+        PATH = "${DOCKER_BIN};${MINIKUBE_BIN};${MAVEN_BIN};${JAVA_BIN};${env.PATH}"
+        // Docker Desktop and Kubernetes credentials & context
+        DOCKER_CONFIG = 'C:\\Users\\Admin\\.docker'
+        DOCKER_HOST = 'npipe:////./pipe/dockerDesktopLinuxEngine'
+        KUBECONFIG = 'C:\\Users\\Admin\\.kube\\config'
     }
 
     stages {
@@ -66,10 +74,12 @@ pipeline {
                 echo '=== Stage 5: Deploy to Kubernetes (Minikube) ==='
                 script {
                     if (isUnix()) {
+                        sh "minikube image load ${IMAGE_NAME}"
                         sh 'kubectl apply -f deployment.yaml'
                         sh 'kubectl apply -f service.yaml'
                         sh 'kubectl rollout status deployment/spring-boot-hello-deployment --timeout=90s'
                     } else {
+                        bat "minikube image load ${IMAGE_NAME}"
                         bat 'kubectl apply -f deployment.yaml'
                         bat 'kubectl apply -f service.yaml'
                         bat 'kubectl rollout status deployment/spring-boot-hello-deployment --timeout=90s'
